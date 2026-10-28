@@ -12,6 +12,7 @@ from functools import lru_cache
 TOKENIZER_NAME = "BAAI/bge-small-en-v1.5"
 TARGET_TOKENS = 400
 MAX_TOKENS = 500  # bge truncates at 512 including [CLS]/[SEP]
+MIN_PARA_TOKENS = 60  # shorter paragraphs are merged with their neighbour
 
 # A number/letter preceded by one of these words is a cross-reference, not a heading.
 XREF_WORDS = {
@@ -74,14 +75,15 @@ class Chunk:
 
 
 def normalize(raw: str) -> str:
-    """Drop page furniture, collapse spaces but keep line breaks as single \\n."""
+    """Drop page furniture, collapse spaces; keep line breaks as \\n and blank lines as \\n\\n."""
     t = raw.replace("\r", "")
     t = re.sub(r"(?<!\w)-\s?\d{1,3}\s?-(?!\w)", " ", t)  # page markers like -17-
     t = re.sub(r"INGRAM[ \t]+NETGEAR[ \t]+Distributor[ \t]+Agreement[ \t]+\d+(?:[ \t]+\d{4,6})?", " ", t, flags=re.I)
     t = re.sub(r"Source: GPAQ ACQUISITION HOLDINGS, INC\., S-4/A, 1/23/2020", " ", t)  # EDGAR footer
     t = re.sub(r"(?m)^[ \t]*\d{1,3}[ \t]*$", "", t)  # lines that are only a page number
     t = re.sub(r"[ \t\f\v]+", " ", t)
-    t = re.sub(r"[ ]*\n\s*", "\n", t)
+    t = re.sub(r"[ ]*\n[ ]*(?:\n[ ]*)+", "\n\n", t)  # blank lines -> one paragraph break
+    t = re.sub(r"[ ]*\n[ ]*", "\n", t)
     return t.strip()
 
 
@@ -226,30 +228,67 @@ def _pack(units, budget: int):
     return out
 
 
+def _paragraphs(seg: str):
+    """Blank-line paragraphs. A break that falls mid-sentence (a page break) is not a paragraph."""
+    out = []
+    for p in seg.split("\n\n"):
+        p = p.replace("\n", " ").strip()
+        if not p:
+            continue
+        if out and (not re.search(r"[.;:?!\"”)\]]$", out[-1]) or p[0].islower()):
+            out[-1] += " " + p
+        else:
+            out.append(p)
+    return out
+
+
+def _merge_small(paras):
+    """Join paragraphs until each group has MIN_PARA_TOKENS; a short tail joins the previous group."""
+    groups, cur = [], ""
+    for p in paras:
+        cur = f"{cur} {p}" if cur else p
+        if n_tokens(cur) >= MIN_PARA_TOKENS:
+            groups.append(cur)
+            cur = ""
+    if cur:
+        if groups:
+            groups[-1] += " " + cur
+        else:
+            groups.append(cur)
+    return groups
+
+
 def chunk_contract(raw: str, contract_id: str, cuad_file: str, title: str, parties: str):
+    """char_start/char_end are approximate offsets into the normalized text (a paragraph break counts as one space)."""
     text = normalize(raw)
     chunks = []
     for cid, heading, start, end in _segments(text):
         seg = text[start:end]
-        body = seg.replace("\n", " ").lstrip()
+        body = " ".join(_paragraphs(seg))
         body_start = start + (len(seg) - len(seg.lstrip()))
-        body = body.rstrip()
         if cid != "preamble" and len(body) - len(cid) - len(heading) < 40:
             continue  # a heading with nothing under it; its sub-clauses carry the text
         label = f"{cid} {heading}".strip() if not cid.startswith("back:") else heading
         header = f"Contract: {title} | Parties: {parties} | Section: {label}"
         marks = _letter_marks(body)
 
-        if n_tokens(f"{header}\n{body}") <= MAX_TOKENS:
-            pieces = [(0, body)]
-        else:
-            budget = TARGET_TOKENS - n_tokens(f"{header} (10/10)\n")
-            cursor, pieces = 0, []
-            for p in _pack(_units(body, budget), budget):
-                off = body.find(p[:40], cursor)
-                off = cursor if off < 0 else off
-                pieces.append((off, p))
-                cursor = off + len(p)
+        groups = _merge_small(_paragraphs(seg))
+        tag = " (10/10)" if len(groups) > 1 else ""
+        budget = TARGET_TOKENS - n_tokens(f"{header}{tag}\n")
+        cursor, pieces = 0, []
+        for grp in groups:
+            off = body.find(grp[:40], cursor)
+            off = cursor if off < 0 else off
+            if n_tokens(f"{header}{tag}\n{grp}") <= MAX_TOKENS:
+                pieces.append((off, grp))
+            else:
+                c2 = off
+                for p in _pack(_units(grp, budget), budget):
+                    o = body.find(p[:40], c2)
+                    o = c2 if o < 0 else o
+                    pieces.append((o, p))
+                    c2 = o + len(p)
+            cursor = off + len(grp)
         n = len(pieces)
         for k, (off, p) in enumerate(pieces, 1):
             part_tag = f" ({k}/{n})" if n > 1 else ""
