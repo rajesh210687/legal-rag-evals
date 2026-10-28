@@ -1,0 +1,27 @@
+{
+  "GpaqAcquisitionHoldingsInc_20200123_S-4A_EX-10.6_11951677_EX-10.6_License Agreement": {
+    "contract_id": "lic",
+    "title": "Media License Agreement",
+    "parties": "National Football Museum, Inc. d/b/a Pro Football Hall of Fame (PFHOF); HOF Village Media Group, LLC (Village Media Company); HOF Village, LLC (HOFV)"
+  },
+  "NETGEAR,INC_04_21_2003-EX-10.16-DISTRIBUTOR AGREEMENT": {
+    "contract_id": "dis",
+    "title": "Distributor Agreement",
+    "parties": "Ingram Micro (Distributor); NETGEAR, Inc. (NETGEAR)"
+  },
+  "MPLXLP_06_17_2015-EX-10.1-TRANSPORTATION SERVICES AGREEMENT": {
+    "contract_id": "svc",
+    "title": "Transportation Services Agreement",
+    "parties": "Marathon Petroleum Company LP (Shipper); Marathon Pipe Line LLC (MPL)"
+  },
+  "SEASPINEHOLDINGSCORP_10_10_2018-EX-10.1-SUPPLY AGREEMENT": {
+    "contract_id": "sup",
+    "title": "Supply Agreement",
+    "parties": "Integra LifeSciences Corporation (Integra); PcoMed, LLC (PcoMed)"
+  },
+  "KIROMICBIOPHARMA,INC_04_08_2020-EX-10.28-JOINT VENTURE AGREEMENT": {
+    "contract_id": "jv",
+    "title": "Joint Venture Agreement",
+    "parties": "Kiromic BioPharma Inc. (Kiromic); Molipharma S.R.L. (Molipharma)"
+  }
+}
