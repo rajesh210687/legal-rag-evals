@@ -12,10 +12,10 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from legal_rag.chunker import section_matches  # noqa: E402
-from legal_rag.retrieval import search_bm25, search_embeddings  # noqa: E402
+from legal_rag.retrieval import search_bm25, search_embeddings, search_hybrid  # noqa: E402
 
 K = 20
-METHODS = {"dense": search_embeddings, "bm25": search_bm25}
+METHODS = {"dense": search_embeddings, "bm25": search_bm25, "rrf": search_hybrid}
 
 
 def norm(s):

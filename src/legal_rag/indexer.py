@@ -45,6 +45,14 @@ def bm25_tokens(text: str):
     return out
 
 
+_CLAUSE_WORD = re.compile(r"(?:section|clause|article|paragraph|§)\s*\d{1,2}\b", re.I)
+
+
+def names_clause(query: str) -> bool:
+    """True if the query points at a clause: 12.3, 7.4(a), 15.B, "clause 9", "Section 16"."""
+    return bool(_CLAUSE_WORD.search(query)) or any(m.group("id") for m in _TOKEN.finditer(query.lower()))
+
+
 def bm25_doc(chunk: dict) -> str:
     """Section ids + heading + body. The title/parties header is left out: it repeats in every chunk."""
     ids = " ".join(chunk["clause_ids"])
