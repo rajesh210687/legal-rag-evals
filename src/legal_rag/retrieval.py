@@ -3,6 +3,8 @@ from functools import lru_cache
 
 from .indexer import ContractIndex, names_clause
 
+DEFAULT_TOP_K = 8  # excerpts passed to the prompt; 8 covered multi-clause questions that 5 missed (evals/runs)
+
 
 @lru_cache(maxsize=None)
 def _index(contract_id: str) -> ContractIndex:

@@ -1,0 +1,23 @@
+{
+  "n_answerable": 25,
+  "n_unanswerable": 5,
+  "retrieval_recall_at_k_any": 92.0,
+  "retrieval_recall_at_k_all": 80.0,
+  "citation_accuracy_any": 92.0,
+  "citation_accuracy_all": 80.0,
+  "citation_accuracy_any_given_retrieved": 100.0,
+  "unanswerable_found_false": 100.0,
+  "labels": {
+    "ok": 25,
+    "retrieval_miss": 2,
+    "partial": 3
+  },
+  "citation_check_failures": 0,
+  "errors": 0,
+  "retries": 0,
+  "mean_seconds_model": 2.531999999999999,
+  "mean_seconds_retrieval": 0.09666666666666668,
+  "input_tokens": 71321,
+  "output_tokens": 3188,
+  "est_cost_usd": 0.175
+}

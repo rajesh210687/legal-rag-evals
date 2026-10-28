@@ -1,0 +1,26 @@
+{
+  "tag": "k5-repeat",
+  "k": 5,
+  "started": "2026-10-28T09:15:23.467850+00:00",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "max_tokens": 8000,
+  "fallbacks": true,
+  "system_prompt_sha": "d5627ec9a414",
+  "retrieval": {
+    "fusion": "weighted RRF, k=10; dense x2, or dense x0.25 when the query names a clause",
+    "bm25": "BM25Plus",
+    "embedding_model": "BAAI/bge-base-en-v1.5"
+  },
+  "chunk_files_sha": {
+    "lic": "d198c6431c79",
+    "dis": "e7626ff95239",
+    "svc": "d958212c5cf8",
+    "sup": "d87f2dd245af",
+    "jv": "a7736682e59a"
+  },
+  "git": {
+    "commit": "e80d86bf48a08a5f7b391837bc2bddb2bf0747b6",
+    "uncommitted_changes": true
+  }
+}
