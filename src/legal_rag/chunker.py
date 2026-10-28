@@ -33,6 +33,8 @@ CAND = re.compile(
     r"|(?P<n>\d{1,2})\.(?P<m>\d{1,3})\.?(?=\s)"
     r"|(?P<let>[A-H])\.(?=\s+[A-Z]))"
 )
+# A heading with no period after its number, alone on its own line: "7 Confidentiality".
+TOP_NODOT = re.compile(r"(?m)^(?P<n>\d{1,2})[ \t]+(?P<h>[A-Z][^\n]{2,80})$")
 BACK_MATTER = re.compile(
     r"IN WITNESS WHEREOF|(?:ATTACHMENT|EXHIBIT|SCHEDULE|ANNEX) [A-Z0-9]+\b"
     r"|(?m:^(?:Attachment|Exhibit|Schedule|Annex) [A-Z0-9]+\b)"
@@ -120,7 +122,14 @@ def _caption(text: str, pos: int, parent: str) -> str:
 def find_boundaries(text: str):
     """Return [(pos, clause_id, heading, level)] in document order."""
     out, top, sub, letter, heading_top = [], 0, 0, -1, ""
-    for m in CAND.finditer(text):
+    found = sorted(list(CAND.finditer(text)) + list(TOP_NODOT.finditer(text)), key=lambda m: m.start())
+    for m in found:
+        if m.re is TOP_NODOT:
+            head = m.group("h").strip()
+            if int(m.group("n")) == top + 1 and len(head.split()) <= 8 and not re.search(r"[.;:,]$", head):
+                top, sub, letter, heading_top = top + 1, 0, -1, head
+                out.append((m.start(), str(top), head, 1))
+            continue
         if not _prev_ok(text, m.start()):
             continue
         nxt = text[m.end():].lstrip()[:1]
